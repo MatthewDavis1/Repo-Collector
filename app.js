@@ -11,6 +11,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const combinedContent = document.getElementById('combinedContent');
     const combinedOutput = document.getElementById('combinedOutput');
     const copyButton = document.getElementById('copyButton');
+    const includeBase64Images = document.getElementById('includeBase64Images');
+    const limitImageSize = document.getElementById('limitImageSize');
+    const maxImageSize = document.getElementById('maxImageSize');
 
     // Data structures to hold the file tree and selected files
     let fileTree = {};
@@ -32,6 +35,42 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error('Failed to copy text:', err);
         }
     });
+
+    // Enable/disable max image size input based on checkbox
+    limitImageSize.addEventListener('change', () => {
+        maxImageSize.disabled = !limitImageSize.checked;
+    });
+
+    // Function to check if a file is an image
+    function isImageFile(filename) {
+        const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'];
+        return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
+    }
+
+    // Function to resize an image
+    async function resizeImage(base64String, maxPixels) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let { width, height } = img;
+
+                // Calculate scaling factor if needed
+                if (maxPixels && (width * height > maxPixels)) {
+                    const ratio = Math.sqrt(maxPixels / (width * height));
+                    width *= ratio;
+                    height *= ratio;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL());
+            };
+            img.src = base64String;
+        });
+    }
 
     // Function to parse GitHub repository URL
     function parseGitHubUrl(url) {
@@ -235,9 +274,26 @@ document.addEventListener("DOMContentLoaded", () => {
                 content = await fetchFileContent(parsed.owner, parsed.repo, filePath);
                 cachedFileContents[filePath] = content;
             }
+
             const middleLine = `==================== File: ${filePath} ====================`;
             const separator = '='.repeat(middleLine.length);
-            combinedOutput.value += `\n\n${separator}\n${middleLine}\n${separator}\n\n${content}`;
+
+            if (isImageFile(filePath) && includeBase64Images.checked) {
+                try {
+                    let base64Content = `data:image/${filePath.split('.').pop()};base64,${content}`;
+                    
+                    if (limitImageSize.checked && maxImageSize.value) {
+                        base64Content = await resizeImage(base64Content, parseInt(maxImageSize.value));
+                    }
+                    
+                    combinedOutput.value += `\n\n${separator}\n${middleLine}\n${separator}\n\n${base64Content}`;
+                } catch (error) {
+                    console.error('Error processing image:', error);
+                    combinedOutput.value += `\n\n${separator}\n${middleLine}\n${separator}\n\nError processing image: ${error.message}`;
+                }
+            } else {
+                combinedOutput.value += `\n\n${separator}\n${middleLine}\n${separator}\n\n${content}`;
+            }
         }
         combinedOutput.value = combinedOutput.value.trim();
     }
@@ -252,7 +308,6 @@ document.addEventListener("DOMContentLoaded", () => {
             throw new Error(data.message || 'Failed to fetch file content');
         }
 
-        const content = atob(data.content);
-        return content;
+        return data.content;
     }
 });

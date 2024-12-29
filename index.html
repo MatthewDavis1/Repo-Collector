@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GitHub Repository Content Collector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">
+            GitHub Repository Content Collector
+        </h1>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="mb-6">
+                <input type="text" 
+                       id="repoUrl" 
+                       placeholder="Enter GitHub Repository URL" 
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <div id="urlError" class="text-red-500 text-sm mt-1"></div>
+            </div>
+
+            <div id="repoInfo" class="mb-6 hidden">
+                <div class="bg-green-100 text-green-700 px-4 py-2 rounded-lg">
+                    Repository: <span id="repoDetails"></span>
+                </div>
+            </div>
+
+            <div id="contentTree" class="mb-6 hidden">
+                <h2 class="text-xl font-semibold mb-4">Select Files and Folders</h2>
+                <div id="treeContainer" class="border rounded-lg p-4 max-h-96 overflow-y-auto"></div>
+            </div>
+
+            <button id="combineButton" 
+                    class="w-full bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors hidden">
+                Combine Selected Files
+            </button>
+
+            <div id="combinedContent" class="mt-6 hidden">
+                <h2 class="text-xl font-semibold mb-4">Combined File Content</h2>
+                <textarea id="combinedOutput" 
+                         class="w-full h-96 p-4 border rounded-lg font-mono text-sm"
+                         readonly></textarea>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

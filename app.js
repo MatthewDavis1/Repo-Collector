@@ -14,6 +14,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const includeBase64Images = document.getElementById('includeBase64Images');
     const limitImageSize = document.getElementById('limitImageSize');
     const maxImageSize = document.getElementById('maxImageSize');
+    const githubToken = document.getElementById('githubToken');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const fetchButton = document.getElementById('fetchButton');
 
     // Data structures to hold the file tree and selected files
     let fileTree = {};
@@ -21,7 +24,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let cachedFileContents = {};
 
     // Event listeners
-    repoUrlInput.addEventListener('input', handleUrlInput);
+    repoUrlInput.addEventListener('input', validateUrl);
+    fetchButton.addEventListener('click', fetchRepository);
     combineButton.addEventListener('click', combineSelectedFiles);
     copyButton.addEventListener('click', async () => {
         try {
@@ -85,43 +89,76 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Handle URL input
-    async function handleUrlInput() {
+    // Validate URL and update UI
+    function validateUrl() {
         const inputUrl = repoUrlInput.value.trim();
         urlError.textContent = '';
         repoInfo.classList.add('hidden');
         contentTree.classList.add('hidden');
         combineButton.classList.add('hidden');
         combinedContent.classList.add('hidden');
+        loadingSpinner.classList.add('hidden');
         treeContainer.innerHTML = '';
         selectedFiles.clear();
         fileTree = {};
 
-        if (!inputUrl) return;
+        if (!inputUrl) {
+            fetchButton.disabled = true;
+            fetchButton.classList.add('opacity-50', 'cursor-not-allowed');
+            return;
+        }
 
         const parsed = parseGitHubUrl(inputUrl);
         if (!parsed) {
             urlError.textContent = 'Invalid GitHub repository URL.';
+            fetchButton.disabled = true;
+            fetchButton.classList.add('opacity-50', 'cursor-not-allowed');
             return;
         }
+
+        fetchButton.disabled = false;
+        fetchButton.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+
+    // Fetch repository contents
+    async function fetchRepository() {
+        const inputUrl = repoUrlInput.value.trim();
+        const parsed = parseGitHubUrl(inputUrl);
+        if (!parsed) return;
 
         repoDetails.textContent = `${parsed.owner}/${parsed.repo}`;
         repoInfo.classList.remove('hidden');
 
         try {
+            loadingSpinner.classList.remove('hidden');
+            fetchButton.disabled = true;
+            fetchButton.classList.add('opacity-50', 'cursor-not-allowed');
+
             const contents = await fetchRepoContents(parsed.owner, parsed.repo);
             fileTree = buildFileTree(contents);
             displayFileTree(fileTree, treeContainer);
             contentTree.classList.remove('hidden');
         } catch (error) {
             urlError.textContent = 'Error accessing repository: ' + error.message;
+        } finally {
+            loadingSpinner.classList.add('hidden');
+            fetchButton.disabled = false;
+            fetchButton.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     }
 
     // Fetch repository contents recursively
     async function fetchRepoContents(owner, repo, path = '') {
         const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-        const response = await fetch(apiUrl);
+        const headers = {
+            'Accept': 'application/vnd.github.v3+json'
+        };
+        
+        if (githubToken.value.trim()) {
+            headers['Authorization'] = `token ${githubToken.value.trim()}`;
+        }
+
+        const response = await fetch(apiUrl, { headers });
         const data = await response.json();
 
         if (!response.ok) {
@@ -301,13 +338,26 @@ document.addEventListener("DOMContentLoaded", () => {
     // Fetch individual file content
     async function fetchFileContent(owner, repo, path) {
         const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
-        const response = await fetch(apiUrl);
+        const headers = {
+            'Accept': 'application/vnd.github.v3+json'
+        };
+        
+        if (githubToken.value.trim()) {
+            headers['Authorization'] = `token ${githubToken.value.trim()}`;
+        }
+
+        const response = await fetch(apiUrl, { headers });
         const data = await response.json();
 
         if (!response.ok) {
             throw new Error(data.message || 'Failed to fetch file content');
         }
 
-        return data.content;
+        // Decode base64 content
+        if (isImageFile(path)) {
+            return data.content.replace(/\n/g, ''); // Remove line breaks for images
+        } else {
+            return atob(data.content.replace(/\n/g, '')); // Remove line breaks and decode base64 for text
+        }
     }
 });

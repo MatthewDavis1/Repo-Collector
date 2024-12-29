@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const combineButton = document.getElementById('combineButton');
     const combinedContent = document.getElementById('combinedContent');
     const combinedOutput = document.getElementById('combinedOutput');
+    const copyButton = document.getElementById('copyButton');
 
     // Data structures to hold the file tree and selected files
     let fileTree = {};
@@ -19,6 +20,18 @@ document.addEventListener("DOMContentLoaded", () => {
     // Event listeners
     repoUrlInput.addEventListener('input', handleUrlInput);
     combineButton.addEventListener('click', combineSelectedFiles);
+    copyButton.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(combinedOutput.value);
+            const originalText = copyButton.innerHTML;
+            copyButton.innerHTML = '<i class="fas fa-check mr-2"></i>Copied!';
+            setTimeout(() => {
+                copyButton.innerHTML = originalText;
+            }, 2000);
+        } catch (err) {
+            console.error('Failed to copy text:', err);
+        }
+    });
 
     // Function to parse GitHub repository URL
     function parseGitHubUrl(url) {

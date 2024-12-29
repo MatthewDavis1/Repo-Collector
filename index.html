@@ -38,7 +38,12 @@
             </button>
 
             <div id="combinedContent" class="mt-6 hidden">
-                <h2 class="text-xl font-semibold mb-4">Combined File Content</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Combined File Content</h2>
+                    <button id="copyButton" class="bg-gray-500 text-white px-4 py-1 rounded-lg hover:bg-gray-600 transition-colors flex items-center">
+                        <i class="fas fa-copy mr-2"></i>Copy
+                    </button>
+                </div>
                 <textarea id="combinedOutput" 
                          class="w-full h-96 p-4 border rounded-lg font-mono text-sm"
                          readonly></textarea>

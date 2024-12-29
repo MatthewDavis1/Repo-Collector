@@ -235,7 +235,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 content = await fetchFileContent(parsed.owner, parsed.repo, filePath);
                 cachedFileContents[filePath] = content;
             }
-            combinedOutput.value += `\n\n# File: ${filePath}\n\n${content}`;
+            const middleLine = `==================== File: ${filePath} ====================`;
+            const separator = '='.repeat(middleLine.length);
+            combinedOutput.value += `\n\n${separator}\n${middleLine}\n${separator}\n\n${content}`;
         }
         combinedOutput.value = combinedOutput.value.trim();
     }

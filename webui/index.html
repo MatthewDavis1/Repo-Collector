@@ -51,6 +51,18 @@
                            id="limitImageSize" 
                            class="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500">
                     <label for="limitImageSize" class="text-gray-700">Limit Image Size</label>
+                    <div class="relative inline-block group">
+                        <i class="fas fa-info-circle text-blue-500 hover:text-blue-600 transition-colors"></i>
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 z-50">
+                            <div class="bg-gray-900 text-white text-sm rounded-lg px-3 py-2 shadow-lg">
+                                <div class="relative">
+                                    Maximum total pixels in the image (width × height).<br>
+                                    Example: 512×512 = 262,144 pixels
+                                    <div class="absolute w-2 h-2 bg-gray-900 transform rotate-45 left-1/2 -translate-x-1/2 -bottom-1"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <input type="number" 
                            id="maxImageSize" 
                            placeholder="Max pixels" 
